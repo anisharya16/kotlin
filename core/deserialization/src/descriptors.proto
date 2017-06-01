@@ -334,6 +334,8 @@ message Property {
   optional int32 getter_flags = 7 /* absent => same as property */;
   optional int32 setter_flags = 8 /* absent => same as property */;
 
+  optional TypeTable type_table = 30;
+
   // Index into the SinceKotlinInfoTable
   optional int32 sinceKotlinInfo = 31;
 

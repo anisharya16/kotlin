@@ -332,6 +332,11 @@ open class ProtoCompareGenerated(val oldNameResolver: NameResolver, val newNameR
             if (old.setterFlags != new.setterFlags) return false
         }
 
+        if (old.hasTypeTable() != new.hasTypeTable()) return false
+        if (old.hasTypeTable()) {
+            if (!checkEquals(old.typeTable, new.typeTable)) return false
+        }
+
         if (old.hasSinceKotlinInfo() != new.hasSinceKotlinInfo()) return false
         if (old.hasSinceKotlinInfo()) {
             if (old.sinceKotlinInfo != new.sinceKotlinInfo) return false
@@ -1223,6 +1228,10 @@ fun ProtoBuf.Property.hashCode(stringIndexes: (Int) -> Int, fqNameIndexes: (Int)
 
     if (hasSetterFlags()) {
         hashCode = 31 * hashCode + setterFlags
+    }
+
+    if (hasTypeTable()) {
+        hashCode = 31 * hashCode + typeTable.hashCode(stringIndexes, fqNameIndexes)
     }
 
     if (hasSinceKotlinInfo()) {

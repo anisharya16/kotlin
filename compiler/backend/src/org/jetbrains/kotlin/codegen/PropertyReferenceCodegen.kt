@@ -19,14 +19,17 @@ package org.jetbrains.kotlin.codegen
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.ReflectionTypes
 import org.jetbrains.kotlin.codegen.AsmUtil.method
+import org.jetbrains.kotlin.codegen.AsmUtil.writeAnnotationData
 import org.jetbrains.kotlin.codegen.binding.CodegenBinding
 import org.jetbrains.kotlin.codegen.context.ClassContext
+import org.jetbrains.kotlin.codegen.serialization.JvmSerializerExtension
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.descriptors.impl.LocalVariableDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.load.java.JvmAbi
+import org.jetbrains.kotlin.load.kotlin.header.KotlinClassHeader
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.resolve.DescriptorFactory
 import org.jetbrains.kotlin.resolve.DescriptorUtils
@@ -35,6 +38,7 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.getSuperClassNotAny
 import org.jetbrains.kotlin.resolve.jvm.AsmTypes.*
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature
+import org.jetbrains.kotlin.serialization.DescriptorSerializer
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.builtIns
 import org.jetbrains.kotlin.util.OperatorNameConventions
@@ -161,7 +165,13 @@ class PropertyReferenceCodegen(
     }
 
     override fun generateKotlinMetadataAnnotation() {
-        writeSyntheticClassMetadata(v, state)
+        writeKotlinMetadata(v, state, KotlinClassHeader.Kind.SYNTHETIC_CLASS, 0) { av ->
+            if (localVariableDescriptorForReference is LocalVariableDescriptor) {
+                val freePropertyDescriptor = createFreeFakeLocalPropertyDescriptor(localVariableDescriptorForReference)
+                val serializer = DescriptorSerializer.createForSyntheticClass(JvmSerializerExtension(v.serializationBindings, state))
+                writeAnnotationData(av, serializer, serializer.propertyProto(freePropertyDescriptor).build())
+            }
+        }
     }
 
     fun putInstanceOnStack(receiverValue: (() -> Unit)?): StackValue {

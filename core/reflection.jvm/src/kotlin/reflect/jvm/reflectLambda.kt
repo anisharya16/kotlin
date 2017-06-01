@@ -18,7 +18,10 @@
 
 package kotlin.reflect.jvm
 
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.load.kotlin.JvmNameResolver
+import org.jetbrains.kotlin.protobuf.ExtensionRegistryLite
+import org.jetbrains.kotlin.protobuf.MessageLite
 import org.jetbrains.kotlin.serialization.ProtoBuf
 import org.jetbrains.kotlin.serialization.deserialization.DeserializationContext
 import org.jetbrains.kotlin.serialization.deserialization.MemberDeserializer
@@ -27,10 +30,14 @@ import org.jetbrains.kotlin.serialization.deserialization.descriptors.SinceKotli
 import org.jetbrains.kotlin.serialization.jvm.BitEncoding
 import org.jetbrains.kotlin.serialization.jvm.JvmProtoBuf
 import org.jetbrains.kotlin.serialization.jvm.JvmProtoBufUtil
+import java.io.InputStream
+import kotlin.jvm.internal.LocalVariableReference
+import kotlin.jvm.internal.MutableLocalVariableReference
+import kotlin.jvm.internal.PropertyReference
 import kotlin.reflect.KFunction
-import kotlin.reflect.jvm.internal.EmptyContainerForLocal
-import kotlin.reflect.jvm.internal.KFunctionImpl
-import kotlin.reflect.jvm.internal.getOrCreateModule
+import kotlin.reflect.KMutableProperty0
+import kotlin.reflect.KProperty0
+import kotlin.reflect.jvm.internal.*
 
 /**
  * This is an experimental API. Given a class for a compiled Kotlin lambda or a function expression,
@@ -38,18 +45,54 @@ import kotlin.reflect.jvm.internal.getOrCreateModule
  * Not all features are currently supported, in particular [KCallable.call] and [KCallable.callBy] will fail at the moment.
  */
 fun <R> Function<R>.reflect(): KFunction<R>? {
-    val annotation = javaClass.getAnnotation(Metadata::class.java) ?: return null
+    val descriptor = deserializeToDescriptor(this, ProtoBuf.Function::parseFrom, MemberDeserializer::loadFunction) ?: return null
+    @Suppress("UNCHECKED_CAST")
+    return KFunctionImpl(EmptyContainerForLocal, descriptor) as KFunction<R>
+}
+
+internal fun LocalVariableReference.reflectLocalVariable(): KProperty0<*>? {
+    return reflectLocalVariable(this, mutable = false)
+}
+
+internal fun MutableLocalVariableReference.reflectMutableLocalVariable(): KMutableProperty0<*>? {
+    return reflectLocalVariable(this, mutable = true) as KMutableProperty0<*>?
+}
+
+private fun reflectLocalVariable(reference: PropertyReference, mutable: Boolean): KProperty0<*>? {
+    val descriptor = deserializeToDescriptor(reference, ProtoBuf.Property::parseFrom, MemberDeserializer::loadProperty) ?: return null
+
+    return if (mutable) KMutableProperty0Impl<Any>(EmptyContainerForLocal, descriptor)
+    else KProperty0Impl<Any>(EmptyContainerForLocal, descriptor)
+}
+
+private fun <M : MessageLite, D : CallableDescriptor> deserializeToDescriptor(
+        instance: Any,
+        parseMessage: (InputStream, ExtensionRegistryLite) -> M,
+        createDescriptor: MemberDeserializer.(M) -> D
+): D? {
+    val annotation = instance.javaClass.getAnnotation(Metadata::class.java) ?: return null
     val input = BitEncoding.decodeBytes(annotation.d1).inputStream()
     val nameResolver = JvmNameResolver(
             JvmProtoBuf.StringTableTypes.parseDelimitedFrom(input, JvmProtoBufUtil.EXTENSION_REGISTRY), annotation.d2
     )
-    val proto = ProtoBuf.Function.parseFrom(input, JvmProtoBufUtil.EXTENSION_REGISTRY)
-    val moduleData = javaClass.getOrCreateModule()
+    val proto = parseMessage(input, JvmProtoBufUtil.EXTENSION_REGISTRY)
+
+    val moduleData = instance.javaClass.getOrCreateModule()
+
+    val typeTable = when (proto) {
+        is ProtoBuf.Function -> proto.typeTable
+        is ProtoBuf.Property -> proto.typeTable
+        else -> error("Unsupported message: $proto")
+    }
+    val typeParameters = when (proto) {
+        is ProtoBuf.Function -> proto.typeParameterList
+        is ProtoBuf.Property -> proto.typeParameterList
+        else -> error("Unsupported message: $proto")
+    }
+
     val context = DeserializationContext(
-            moduleData.deserialization, nameResolver, moduleData.module, TypeTable(proto.typeTable), SinceKotlinInfoTable.EMPTY,
-            containerSource = null, parentTypeDeserializer = null, typeParameters = proto.typeParameterList
+            moduleData.deserialization, nameResolver, moduleData.module, TypeTable(typeTable), SinceKotlinInfoTable.EMPTY,
+            containerSource = null, parentTypeDeserializer = null, typeParameters = typeParameters
     )
-    val descriptor = MemberDeserializer(context).loadFunction(proto)
-    @Suppress("UNCHECKED_CAST")
-    return KFunctionImpl(EmptyContainerForLocal, descriptor) as KFunction<R>
+    return MemberDeserializer(context).createDescriptor(proto)
 }

@@ -73,11 +73,17 @@ public class ReflectionFactoryImpl extends ReflectionFactory {
 
     @Override
     public KProperty0 property0(PropertyReference0 p) {
+        if (p instanceof LocalVariableReference) {
+            return ReflectLambdaKt.reflectLocalVariable((LocalVariableReference) p);
+        }
         return new KProperty0Impl(getOwner(p), p.getName(), p.getSignature(), p.getBoundReceiver());
     }
 
     @Override
     public KMutableProperty0 mutableProperty0(MutablePropertyReference0 p) {
+        if (p instanceof MutableLocalVariableReference) {
+            return ReflectLambdaKt.reflectMutableLocalVariable((MutableLocalVariableReference) p);
+        }
         return new KMutableProperty0Impl(getOwner(p), p.getName(), p.getSignature(), p.getBoundReceiver());
     }
 

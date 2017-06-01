@@ -15487,6 +15487,15 @@ public final class ProtoBuf {
     int getSetterFlags();
 
     /**
+     * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+     */
+    boolean hasTypeTable();
+    /**
+     * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+     */
+    org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable getTypeTable();
+
+    /**
      * <code>optional int32 sinceKotlinInfo = 31;</code>
      *
      * <pre>
@@ -15636,8 +15645,21 @@ public final class ProtoBuf {
               flags_ = input.readInt32();
               break;
             }
-            case 248: {
+            case 242: {
+              org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000400) == 0x00000400)) {
+                subBuilder = typeTable_.toBuilder();
+              }
+              typeTable_ = input.readMessage(org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(typeTable_);
+                typeTable_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000400;
+              break;
+            }
+            case 248: {
+              bitField0_ |= 0x00000800;
               sinceKotlinInfo_ = input.readInt32();
               break;
             }
@@ -15913,6 +15935,21 @@ public final class ProtoBuf {
       return setterFlags_;
     }
 
+    public static final int TYPE_TABLE_FIELD_NUMBER = 30;
+    private org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable typeTable_;
+    /**
+     * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+     */
+    public boolean hasTypeTable() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+     */
+    public org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable getTypeTable() {
+      return typeTable_;
+    }
+
     public static final int SINCEKOTLININFO_FIELD_NUMBER = 31;
     private int sinceKotlinInfo_;
     /**
@@ -15923,7 +15960,7 @@ public final class ProtoBuf {
      * </pre>
      */
     public boolean hasSinceKotlinInfo() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000800) == 0x00000800);
     }
     /**
      * <code>optional int32 sinceKotlinInfo = 31;</code>
@@ -15948,6 +15985,7 @@ public final class ProtoBuf {
       setterValueParameter_ = org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter.getDefaultInstance();
       getterFlags_ = 0;
       setterFlags_ = 0;
+      typeTable_ = org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.getDefaultInstance();
       sinceKotlinInfo_ = 0;
     }
     private byte memoizedIsInitialized = -1;
@@ -15980,6 +16018,12 @@ public final class ProtoBuf {
       }
       if (hasSetterValueParameter()) {
         if (!getSetterValueParameter().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasTypeTable()) {
+        if (!getTypeTable().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -16032,6 +16076,9 @@ public final class ProtoBuf {
         output.writeInt32(11, flags_);
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeMessage(30, typeTable_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeInt32(31, sinceKotlinInfo_);
       }
       extensionWriter.writeUntil(200, output);
@@ -16089,6 +16136,10 @@ public final class ProtoBuf {
           .computeInt32Size(11, flags_);
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += org.jetbrains.kotlin.protobuf.CodedOutputStream
+          .computeMessageSize(30, typeTable_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += org.jetbrains.kotlin.protobuf.CodedOutputStream
           .computeInt32Size(31, sinceKotlinInfo_);
       }
@@ -16208,8 +16259,10 @@ public final class ProtoBuf {
         bitField0_ = (bitField0_ & ~0x00000200);
         setterFlags_ = 0;
         bitField0_ = (bitField0_ & ~0x00000400);
-        sinceKotlinInfo_ = 0;
+        typeTable_ = org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.getDefaultInstance();
         bitField0_ = (bitField0_ & ~0x00000800);
+        sinceKotlinInfo_ = 0;
+        bitField0_ = (bitField0_ & ~0x00001000);
         return this;
       }
 
@@ -16281,6 +16334,10 @@ public final class ProtoBuf {
         if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
           to_bitField0_ |= 0x00000400;
         }
+        result.typeTable_ = typeTable_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00000800;
+        }
         result.sinceKotlinInfo_ = sinceKotlinInfo_;
         result.bitField0_ = to_bitField0_;
         return result;
@@ -16328,6 +16385,9 @@ public final class ProtoBuf {
         if (other.hasSetterFlags()) {
           setSetterFlags(other.getSetterFlags());
         }
+        if (other.hasTypeTable()) {
+          mergeTypeTable(other.getTypeTable());
+        }
         if (other.hasSinceKotlinInfo()) {
           setSinceKotlinInfo(other.getSinceKotlinInfo());
         }
@@ -16362,6 +16422,12 @@ public final class ProtoBuf {
         }
         if (hasSetterValueParameter()) {
           if (!getSetterValueParameter().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasTypeTable()) {
+          if (!getTypeTable().isInitialized()) {
             
             return false;
           }
@@ -17021,6 +17087,66 @@ public final class ProtoBuf {
         return this;
       }
 
+      private org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable typeTable_ = org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.getDefaultInstance();
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public boolean hasTypeTable() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable getTypeTable() {
+        return typeTable_;
+      }
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public Builder setTypeTable(org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        typeTable_ = value;
+
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public Builder setTypeTable(
+          org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.Builder builderForValue) {
+        typeTable_ = builderForValue.build();
+
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public Builder mergeTypeTable(org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable value) {
+        if (((bitField0_ & 0x00000800) == 0x00000800) &&
+            typeTable_ != org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.getDefaultInstance()) {
+          typeTable_ =
+            org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.newBuilder(typeTable_).mergeFrom(value).buildPartial();
+        } else {
+          typeTable_ = value;
+        }
+
+        bitField0_ |= 0x00000800;
+        return this;
+      }
+      /**
+       * <code>optional .org.jetbrains.kotlin.serialization.TypeTable type_table = 30;</code>
+       */
+      public Builder clearTypeTable() {
+        typeTable_ = org.jetbrains.kotlin.serialization.ProtoBuf.TypeTable.getDefaultInstance();
+
+        bitField0_ = (bitField0_ & ~0x00000800);
+        return this;
+      }
+
       private int sinceKotlinInfo_ ;
       /**
        * <code>optional int32 sinceKotlinInfo = 31;</code>
@@ -17030,7 +17156,7 @@ public final class ProtoBuf {
        * </pre>
        */
       public boolean hasSinceKotlinInfo() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00001000) == 0x00001000);
       }
       /**
        * <code>optional int32 sinceKotlinInfo = 31;</code>
@@ -17050,7 +17176,7 @@ public final class ProtoBuf {
        * </pre>
        */
       public Builder setSinceKotlinInfo(int value) {
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00001000;
         sinceKotlinInfo_ = value;
         
         return this;
@@ -17063,7 +17189,7 @@ public final class ProtoBuf {
        * </pre>
        */
       public Builder clearSinceKotlinInfo() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00001000);
         sinceKotlinInfo_ = 0;
         
         return this;
