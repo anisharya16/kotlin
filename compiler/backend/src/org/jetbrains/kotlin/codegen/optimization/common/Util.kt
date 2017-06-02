@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.codegen.optimization.common
 
 import org.jetbrains.kotlin.codegen.inline.InlineCodegenUtil
+import org.jetbrains.kotlin.resolve.jvm.AsmTypes
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.Opcodes.*
@@ -186,3 +187,5 @@ internal inline fun <reified T : AbstractInsnNode> AbstractInsnNode.isInsn(opcod
 internal inline fun <reified T : AbstractInsnNode> AbstractInsnNode.takeInsnIf(opcode: Int, condition: T.() -> Boolean): T? =
         takeIf { it.opcode == opcode }?.safeAs<T>()?.takeIf { it.condition() }
 
+fun mergeTypes(type1: Type, type2: Type): Type =
+        if (type1 == type2) type1 else AsmTypes.OBJECT_TYPE

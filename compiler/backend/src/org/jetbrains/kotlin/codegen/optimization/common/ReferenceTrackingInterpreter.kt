@@ -16,8 +16,6 @@
 
 package org.jetbrains.kotlin.codegen.optimization.common
 
-import org.jetbrains.kotlin.resolve.jvm.AsmTypes
-import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.tree.AbstractInsnNode
 import org.jetbrains.org.objectweb.asm.tree.analysis.BasicValue
 
@@ -42,7 +40,7 @@ abstract class ReferenceTrackingInterpreter : OptimizationBasicInterpreter() {
 
     protected fun createTaintedValue(v: BasicValue, w: BasicValue) : TrackedReferenceValue =
             TaintedTrackedReferenceValue(
-                    getMergedValueType(v.type, w.type),
+                    mergeTypes(v.type, w.type),
                     mergeDescriptors(v, w).also {
                         assert(it.isNotEmpty()) { "At least one of ($v, $w) should be a tracked reference" }
                     }
@@ -52,7 +50,7 @@ abstract class ReferenceTrackingInterpreter : OptimizationBasicInterpreter() {
             if (v is TaintedTrackedReferenceValue || w is TaintedTrackedReferenceValue)
                 createTaintedValue(v, w)
             else
-                MergedTrackedReferenceValue(getMergedValueType(v.type, w.type), mergeDescriptors(v, w))
+                MergedTrackedReferenceValue(mergeTypes(v.type, w.type), mergeDescriptors(v, w))
 
     protected open fun createPossiblyMergedValue(v: TrackedReferenceValue, w: TrackedReferenceValue): TrackedReferenceValue =
             createTaintedValue(v, w)
@@ -62,13 +60,6 @@ abstract class ReferenceTrackingInterpreter : OptimizationBasicInterpreter() {
 
     private val BasicValue.referenceValueDescriptors: Set<ReferenceValueDescriptor>
         get() = if (this is TrackedReferenceValue) this.descriptors else emptySet()
-
-    protected fun getMergedValueType(type1: Type?, type2: Type?): Type =
-            when {
-                type1 == null || type2 == null -> AsmTypes.OBJECT_TYPE
-                type1 == type2 -> type1
-                else -> AsmTypes.OBJECT_TYPE
-            }
 
     override fun copyOperation(insn: AbstractInsnNode, value: BasicValue): BasicValue? =
             if (value is TrackedReferenceValue) {
