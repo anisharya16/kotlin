@@ -88,10 +88,10 @@ task reflectShadowJar(type: ShadowJar) {
     manifest.attributes 'Class-Path': 'kotlin-stdlib.jar'
 
     from (sourceSets.main.output)
-    from ("${core}/descriptor.loader.java/src") {
+    from ("${core}/descriptor.loader.java/relocated") {
         include 'META-INF/services/**'
     }
-    from ("${core}/deserialization/src") {
+    from ("${core}/deserialization/relocated") {
         include 'META-INF/services/**'
     }
 
