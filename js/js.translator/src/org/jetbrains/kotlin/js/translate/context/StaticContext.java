@@ -48,12 +48,14 @@ import org.jetbrains.kotlin.resolve.BindingTrace;
 import org.jetbrains.kotlin.resolve.DescriptorUtils;
 import org.jetbrains.kotlin.resolve.calls.tasks.DynamicCallsKt;
 import org.jetbrains.kotlin.resolve.descriptorUtil.DescriptorUtilsKt;
-import org.jetbrains.kotlin.serialization.deserialization.FindClassInModuleKt;
 import org.jetbrains.kotlin.serialization.js.ModuleKind;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.jetbrains.kotlin.types.typeUtil.TypeUtilsKt;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.jetbrains.kotlin.js.config.JsConfig.UNKNOWN_EXTERNAL_MODULE_NAME;
 import static org.jetbrains.kotlin.js.translate.utils.AnnotationsUtils.isLibraryObject;
