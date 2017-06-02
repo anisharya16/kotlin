@@ -16,30 +16,25 @@
 
 package org.jetbrains.kotlin.codegen.optimization
 
-import org.jetbrains.kotlin.codegen.optimization.common.expect
-import org.jetbrains.kotlin.codegen.optimization.common.matchInsns
-import org.jetbrains.kotlin.codegen.optimization.common.opcode
+import org.jetbrains.kotlin.codegen.optimization.common.*
 import org.jetbrains.kotlin.codegen.optimization.transformer.MethodTransformer
 import org.jetbrains.org.objectweb.asm.Opcodes
-import org.jetbrains.org.objectweb.asm.tree.AbstractInsnNode
-import org.jetbrains.org.objectweb.asm.tree.InsnList
-import org.jetbrains.org.objectweb.asm.tree.JumpInsnNode
-import org.jetbrains.org.objectweb.asm.tree.MethodNode
+import org.jetbrains.org.objectweb.asm.tree.*
 
 class PeepholeMethodTransformer : MethodTransformer() {
-    private class PeepholerContext(val methodNode: MethodNode) {
-        // TODO
+    private class PeepholerContext(internalClassName: String, val methodNode: MethodNode) {
+        val storesToLoads = matchStoresWithLoads(internalClassName, methodNode)
     }
 
     private interface Peepholer {
         fun tryRewrite(instructions: InsnList, insn: AbstractInsnNode, context: PeepholerContext): AbstractInsnNode?
     }
 
-    private val peepholers = listOf(IfNotPeepholer)
+    private val peepholers = listOf(IfNotPeepholer, PrintPeepholer)
 
     override fun transform(internalClassName: String, methodNode: MethodNode) {
         val instructions = methodNode.instructions
-        val context = PeepholerContext(methodNode)
+        val context = PeepholerContext(internalClassName, methodNode)
 
         do {
             var changes = false
@@ -79,4 +74,40 @@ class PeepholeMethodTransformer : MethodTransformer() {
         }
     }
 
+    private object PrintPeepholer : Peepholer {
+        override fun tryRewrite(instructions: InsnList, insn: AbstractInsnNode, context: PeepholerContext): AbstractInsnNode? {
+            insn.matchInsns {
+                val storeInsn = expect<VarInsnNode> { isStoreOperation() }
+                tryExpectInsn { opcode == Opcodes.NOP }
+                tryExpect<LabelNode>()
+                val getSystemOutInsn = expect<FieldInsnNode>(Opcodes.GETSTATIC) {
+                    owner == "java/lang/System" && (name == "out" || name == "err")
+                }
+                val loadInsn = expect<VarInsnNode> { isLoadOperation() && `var` == storeInsn.`var` }
+
+                if (context.storesToLoads[storeInsn]?.size != 1) return null
+
+                val beforeStore = storeInsn.previous ?: return null
+                instructions.run {
+                    remove(storeInsn)
+                    remove(loadInsn)
+                    if (isSafeToSwapInPlace(beforeStore)) {
+                        remove(getSystemOutInsn)
+                        insertBefore(beforeStore, getSystemOutInsn)
+                    }
+                    else {
+                        insert(getSystemOutInsn, InsnNode(Opcodes.SWAP))
+                    }
+                }
+
+                return getSystemOutInsn
+            }
+
+            return null
+        }
+
+        private fun isSafeToSwapInPlace(beforeStore: AbstractInsnNode): Boolean =
+                beforeStore.opcode in Opcodes.ACONST_NULL .. Opcodes.ALOAD
+
+    }
 }

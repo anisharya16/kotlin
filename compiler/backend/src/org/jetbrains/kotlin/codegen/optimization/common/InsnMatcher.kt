@@ -48,9 +48,23 @@ fun InsnMatcher.previous(): AbstractInsnNode? {
     return current
 }
 
-inline fun InsnMatcher.match(predicate: AbstractInsnNode.() -> Boolean): AbstractInsnNode {
+inline fun InsnMatcher.expectInsn(predicate: AbstractInsnNode.() -> Boolean): AbstractInsnNode {
     val insn = current ?: fail()
     if (!insn.predicate()) fail()
+    current = insn.next
+    return insn
+}
+
+inline fun InsnMatcher.tryExpectInsn(predicate: AbstractInsnNode.() -> Boolean): AbstractInsnNode? {
+    val insn = current ?: fail()
+    if (!insn.predicate()) return null
+    current = insn.next
+    return insn
+}
+
+inline fun <reified T : AbstractInsnNode> InsnMatcher.expect(): T {
+    val insn = current ?: fail()
+    if (insn !is T) fail()
     current = insn.next
     return insn
 }
@@ -62,4 +76,32 @@ inline fun <reified T : AbstractInsnNode> InsnMatcher.expect(predicate: T.() -> 
     return insn
 }
 
-fun InsnMatcher.opcode(opcode: Int): AbstractInsnNode = match { this.opcode == opcode }
+inline fun <reified T : AbstractInsnNode> InsnMatcher.expect(opcode: Int, predicate: T.() -> Boolean): T {
+    val insn = current ?: fail()
+    if (insn.opcode != opcode || insn !is T || !insn.predicate()) fail()
+    current = insn.next
+    return insn
+}
+
+inline fun <reified T : AbstractInsnNode> InsnMatcher.tryExpect(): T? {
+    val insn = current ?: fail()
+    if (insn !is T) return null
+    current = insn.next
+    return insn
+}
+
+inline fun <reified T : AbstractInsnNode> InsnMatcher.tryExpect(opcode: Int, predicate: T.() -> Boolean): T? {
+    val insn = current ?: fail()
+    if (insn.opcode != opcode || insn !is T || !insn.predicate()) return null
+    current = insn.next
+    return insn
+}
+
+inline fun <reified T : AbstractInsnNode> InsnMatcher.tryExpect(predicate: T.() -> Boolean): T? {
+    val insn = current ?: fail()
+    if (insn !is T || !insn.predicate()) return null
+    current = insn.next
+    return insn
+}
+
+fun InsnMatcher.opcode(opcode: Int): AbstractInsnNode = expectInsn { this.opcode == opcode }
