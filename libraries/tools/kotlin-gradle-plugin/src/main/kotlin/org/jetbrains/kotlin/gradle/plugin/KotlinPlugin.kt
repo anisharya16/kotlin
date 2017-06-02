@@ -195,6 +195,13 @@ internal class Kotlin2JsSourceSetProcessor(
         kotlinTask.source(kotlinSourceSet.kotlin)
         createCleanSourceMapTask()
 
+        if (project.property("kotlin2js.performDce") == true) {
+            project.tasks.create(sourceSetName, Kotlin2JsDce::class.java).also {
+                it.dependsOn(kotlinTask)
+                project.tasks.findByName(sourceSet.jarTaskName)?.dependsOn(it)
+            }
+        }
+
         // outputFile can be set later during the configuration phase, get it only after the phase:
         project.afterEvaluate {
             kotlinTask.kotlinOptions.outputFile = File(kotlinTask.outputFile).absolutePath
